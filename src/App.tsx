@@ -1,10 +1,11 @@
 import { useState, useRef } from "react";
+import { OpenAI } from "openai"
 import { BeatLoader } from "react-spinners";
 
 type Props = {};
 
 export default function App({}: Props) {
-  const [formData, setFormData] = useState({language: "Hindi", message: ""})
+  const [formData, setFormData] = useState({ language: "Hindi", message: "" });
   const [error, setError] = useState("")
   const [showNotification, setShowNotification] = useState(false)
   const [translation, setTranslation] = useState("")
@@ -15,35 +16,44 @@ export default function App({}: Props) {
 
 
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({...formData, [e.target.name]: e.target.value})
-    console.log(formData)
-    setError("")
-  }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    console.log(formData);
+    setError("");
+  };
+
+const openai = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_KEY,
+  dangerouslyAllowBrowser: true
+});
 
   const translate = async () => {
     const { language, message } = formData;
 
-    try {
-      const response = await fetch('http://localhost:3001/api/translate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          "role": "system",
+          "content": `Translate the user's text into ${language}`
         },
-        body: JSON.stringify({ language, message }),
-      });
-
-      const result = await response.json();
-      const translatedText = result.choices[0].message.content
-      setISLoading(false)
-      setTranslation(translatedText)
-      // console.log(result.choices[0].message.content);
-    } catch (error) {
-      console.error('Error translating:', error);
-    }
+        {
+          "role": "user",
+          "content": `${message}`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 64,
+      top_p: 1,
+    });
+    const translatedText = `${response.choices[0].message.content}`;
+    setISLoading(false)
+    setTranslation(translatedText)
+    console.log(translatedText)
+    
   };
 
-  const handleOnSubmit = (e) => {
+  const handleOnSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!formData.message) {
       setError("Please enter the message you want translated")
@@ -75,6 +85,7 @@ export default function App({}: Props) {
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
+    const translatorWrapperRef = useRef<HTMLDivElement>(null);
     if (
       !translatorWrapperRef.current ||
       !translatorWrapperRef.current.contains(event.relatedTarget as Node)
@@ -104,7 +115,7 @@ export default function App({}: Props) {
           <textarea name="message" placeholder="Type..." onChange={handleInputChange} ></textarea>
           <form onSubmit={handleOnSubmit}>
             <div className="choices">
-              <input type="radio" id="hindi" name="language" value="Hindi" defaultChecked={formData.language} onChange={handleInputChange} />
+              <input type="radio" id="hindi" name="language" value="Hindi" defaultChecked={formData.language ===  "Hindi"} onChange={handleInputChange} />
               <label htmlFor="hindi">Hindi</label>
               <input type="radio" id="spanish" name="language" value="Spanish" onChange={handleInputChange}  />
               <label htmlFor="spanish">Spanish</label>
@@ -133,3 +144,22 @@ export default function App({}: Props) {
     </div>
   );
 }
+
+
+// try {
+//   const response = await fetch('http://localhost:3001/api/translate', {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify({ language, message }),
+//   });
+
+//   const result = await response.json();
+//   const translatedText = result.choices[0].message.content
+//   setISLoading(false)
+//   setTranslation(translatedText)
+//   console.log(result.choices[0].message.content);
+// } catch (error) {
+//   console.error('Error translating:', error);
+// }
