@@ -1,80 +1,90 @@
 import { useState, useRef } from "react";
-import { OpenAI } from "openai"
 import { BeatLoader } from "react-spinners";
 
 type Props = {};
 
 export default function App({}: Props) {
   const [formData, setFormData] = useState({ language: "Hindi", message: "" });
-  const [error, setError] = useState("")
-  const [showNotification, setShowNotification] = useState(false)
-  const [translation, setTranslation] = useState("")
-  const [isLoading, setISLoading] = useState(false)
-  
+  const [error, setError] = useState("");
+  const [showNotification, setShowNotification] = useState(false);
+  const [translation, setTranslation] = useState("");
+  const [isLoading, setISLoading] = useState(false);
+
   const [expand, setExpand] = useState(false);
-  const translatorWrapperRef = useRef(null);
+  const translatorWrapperRef = useRef<HTMLDivElement>(null);
 
-
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    console.log(formData);
     setError("");
   };
 
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_KEY,
-  dangerouslyAllowBrowser: true
-});
-
   const translate = async () => {
     const { language, message } = formData;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          "role": "system",
-          "content": `Translate the user's text into ${language}`
+  
+    try {
+      const response = await fetch("http://localhost:3000/api/translate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        {
-          "role": "user",
-          "content": `${message}`
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 64,
-      top_p: 1,
-    });
-    const translatedText = `${response.choices[0].message.content}`;
-    setISLoading(false)
-    setTranslation(translatedText)
-    console.log(translatedText)
-    
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "system",
+              content: `Translate the user's text accurately into ${language}`,
+            },
+            {
+              role: "user",
+              content: `${message}`,
+            },
+          ],
+        }),
+      });
+  
+      const result = await response.json();
+      const translatedText = result.response;
+      setISLoading(false);
+      setTranslation(translatedText);
+      console.log(translatedText);
+    } catch (error) {
+      console.error("Error translating:", error);
+  
+      // Use type assertion to specify that error is of type Response
+      const errorResponse = error as Response;
+  
+      if (errorResponse && errorResponse.json) {
+        // Log the detailed error response if available
+        console.error('Error response:', await errorResponse.json());
+      }
+    }
   };
+  
 
-  const handleOnSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!formData.message) {
-      setError("Please enter the message you want translated")
+      setError("Please enter the message you want translated");
       return;
     }
-    setISLoading(true)
-    translate()
-  }
+    setISLoading(true);
+    await translate(); // Await the translation
+  };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(translation)
-    .then(() => displayNotification())
-    .catch((err) => console.error("Failed to copy: ", err))
-  }
+    navigator.clipboard
+      .writeText(translation)
+      .then(() => displayNotification())
+      .catch((err) => console.error("Failed to copy: ", err));
+  };
 
   const displayNotification = () => {
-    setShowNotification(true)
+    setShowNotification(true);
     setTimeout(() => {
-      setShowNotification(false)
+      setShowNotification(false);
     }, 3000);
-  }
+  };
 
   const expandHeight = () => {
     setExpand(true);
@@ -85,7 +95,6 @@ const openai = new OpenAI({
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
-    const translatorWrapperRef = useRef<HTMLDivElement>(null);
     if (
       !translatorWrapperRef.current ||
       !translatorWrapperRef.current.contains(event.relatedTarget as Node)
@@ -112,20 +121,42 @@ const openai = new OpenAI({
             <p>What to translate?</p>
             <h3>🤔</h3>
           </div>
-          <textarea name="message" placeholder="Type..." onChange={handleInputChange} ></textarea>
+          <textarea
+            name="message"
+            placeholder="Type..."
+            onChange={handleInputChange}
+          ></textarea>
           <form onSubmit={handleOnSubmit}>
             <div className="choices">
-              <input type="radio" id="hindi" name="language" value="Hindi" defaultChecked={formData.language ===  "Hindi"} onChange={handleInputChange} />
+              <input
+                type="radio"
+                id="hindi"
+                name="language"
+                value="Hindi"
+                defaultChecked={formData.language === "Hindi"}
+                onChange={handleInputChange}
+              />
               <label htmlFor="hindi">Hindi</label>
-              <input type="radio" id="spanish" name="language" value="Spanish" onChange={handleInputChange}  />
+              <input
+                type="radio"
+                id="spanish"
+                name="language"
+                value="Spanish"
+                onChange={handleInputChange}
+              />
               <label htmlFor="spanish">Spanish</label>
-              <input type="radio" id="japanese" name="language" value="Japanese" onChange={handleInputChange}  />
+              <input
+                type="radio"
+                id="japanese"
+                name="language"
+                value="Japanese"
+                onChange={handleInputChange}
+              />
               <label htmlFor="japanese">Japanese</label>
-
             </div>
-              {error && <div className="error">{error}</div>}
+            {error && <div className="error">{error}</div>}
             <div className="translate-btn">
-            <button type="submit">Translate</button>
+              <button type="submit">Translate</button>
             </div>
           </form>
         </div>
@@ -134,7 +165,9 @@ const openai = new OpenAI({
             <p>copy</p>
           </div>
           <p>Translation</p>
-          <p className="translated-text">{isLoading ? <BeatLoader size={12} color="#f4ff9b" /> : translation}</p>
+          <p className="translated-text">
+            {isLoading ? <BeatLoader size={12} color="#f4ff9b" /> : translation}
+          </p>
         </div>
 
         <div className={`notification ${showNotification ? "active" : ""}`}>
@@ -144,7 +177,6 @@ const openai = new OpenAI({
     </div>
   );
 }
-
 
 // try {
 //   const response = await fetch('http://localhost:3001/api/translate', {
