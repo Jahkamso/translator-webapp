@@ -15,7 +15,11 @@ const openai = new OpenAI({
 app.use(express.json());
 
 // Enable CORS for all routes
-app.use(cors());
+app.use(cors({
+  origin: 'https://transx-sigma.vercel.app', // replace with your Vercel app's URL
+  methods: 'POST',
+}));
+
 
 app.post('/api/translate', async (req, res) => {
   try {
