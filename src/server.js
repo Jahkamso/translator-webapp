@@ -1,25 +1,19 @@
 import express from 'express'
 import OpenAI from 'openai'
-import dotenv from 'dotenv'
 import cors from 'cors'
 
-dotenv.config()
-
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.VITE_PORT || 3000;
+console.log(port)
 
 const openai = new OpenAI({
-  apiKey: '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',
+  apiKey: `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`,
 });
 
 app.use(express.json());
 
 // Enable CORS for all routes
-app.use(cors({
-  origin: 'https://transx-sigma.vercel.app', // replace with your Vercel app's URL
-  methods: 'POST',
-}));
-
+app.use(cors());
 
 app.post('/api/translate', async (req, res) => {
   try {
@@ -30,9 +24,10 @@ app.post('/api/translate', async (req, res) => {
       max_tokens: 64,
       top_p: 1,
     });
+    console.log(process.env.VITE_PORT)
 
     res.json({ response: response.choices[0].message.content });
-    console.log(response.choices[0].message.content)
+    // console.log(response.choices[0].message.content)
   } catch (error) {
     console.error(error);
 

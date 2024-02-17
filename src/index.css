@@ -11,6 +11,22 @@
   background-color: #0b0f34;
 }
 
+::-webkit-scrollbar {
+  width: 5px;
+  /* height: 10px; */
+  background: transparent;
+  /* display: none; */
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 50px;
+  /* background-color: #0D9276; */
+}
+::-webkit-scrollbar-track {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background: transparent;
+}
+
 body {
   margin: 0;
   display: flex;
@@ -139,11 +155,20 @@ body {
   position: relative;
   word-wrap: break-word;
   word-break: break-all;
+  overflow: auto;
   /* overflow-y: scroll; */
+}
+
+.translation::-webkit-scrollbar-thumb {
+  display: block;
+  background: #f4ff9b;
+  width: 5px;
+  height: 30px;
 }
 
 .translation .translated-text {
   margin-top: 20px;
+  /* overflow: auto; */
 }
 
 .translation .copy-btn {

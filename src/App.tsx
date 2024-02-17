@@ -24,7 +24,7 @@ export default function App({}: Props) {
     const { language, message } = formData;
   
     try {
-      const response = await fetch("https://transx-sigma.vercel.app/api/translate", {
+      const response = await fetch("http://localhost:3000/api/translate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -47,7 +47,7 @@ export default function App({}: Props) {
       const translatedText = result.response;
       setISLoading(false);
       setTranslation(translatedText);
-      console.log(translatedText);
+      // console.log(translatedText);
     } catch (error) {
       console.error("Error translating:", error);
   
