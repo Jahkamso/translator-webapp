@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { BeatLoader } from "react-spinners";
 
 type Props = {};
@@ -13,6 +13,10 @@ export default function App({}: Props) {
   const [expand, setExpand] = useState(false);
   const translatorWrapperRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    console.log(import.meta.env.VITE_BASE_URL)
+  })
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -24,7 +28,7 @@ export default function App({}: Props) {
     const { language, message } = formData;
   
     try {
-      const response = await fetch("http://localhost:3000/api/translate", {
+      const response = await fetch("https://express-vercel-app-mocha.vercel.app/api/translate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
